@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<link href='../fullcalendar.css' rel='stylesheet' />
+<link href='../fullcalendar.print.css' rel='stylesheet' media='print' />
+<script src='../lib/moment.min.js'></script>
+<script src='../lib/jquery.min.js'></script>
+<script src='../fullcalendar.min.js'></script>
+<script>
+
+	$(document).ready(function() {
+		
+		$('#calendar').fullCalendar({
+			header: {
+				left: '',
+				center: 'prev title next',
+				right: ''
+			},
+			defaultDate: '2016-09-12',
+			navLinks: false, // can click day/week names to navigate views
+			selectable: true,
+			selectHelper: true,
+			select: function(start, end) {
+				$('.delete').hide();
+				$('.modal').show();
+				
+				
+				$('#start').val(start);
+				$('#end').val(end);
+				$('#idevent').val('0');
+				
+				
+				
+				var eventData;
+				if (title) {
+					eventData = {
+						title: title,
+						start: start,
+						end: end
+					};
+					
+				//	$('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+				}
+		//		$('#calendar').fullCalendar('unselect');
+			},
+			editable: true,
+			eventLimit: true, // allow "more" link when too many events
+			// create static json events
+		    events: 'static-calendar-events.json',
+			eventClick:  function(event, jsEvent, view) {
+				$('#idevent').val(event.id);
+				$('#title').val(event.title);
+				$('#old').val(event.title);
+				$('.modal').show();
+			}
+		});
+		$('.close').click(function(e) {
+            	$('.modal').hide();
+        });
+		
+		$('#myForm').submit(function(e) {
+			
+			var idevent = $('#idevent').val();
+			var title = $('#title').val();
+			var start = $('#start').val();
+			var end = $('#end').val();
+			
+		
+				
+				$.getJSON( "static-calendar-events.json", function( data ) {	
+				
+				if( idevent == 0 ){
+					var  value = data.length;
+					 var id =  value++;
+						var newMovie = {id: '"'+id+'"',title:title, start:start , end: end} // a new movie object
+					
+					    // add a new movie to the set
+					    data.push(newMovie); 
+						
+						var newData = JSON.stringify(data);
+						jQuery.post('save.php', {
+							newData: newData
+						}, function(response){
+							// response could contain the url of the newly saved file
+						})     
+				
+			}else{
+				
+				
+				$.each(data, function(i, item) {
+					if ( data[i].id === idevent) {
+						alert(data[i].title);
+					}
+				});
+			     
+					
+			}
+			
+				});
+			
+		});
+	});
+
+</script>
+<style>
+
+	body {
+		margin: 40px 10px;
+		padding: 0;
+		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+		font-size: 14px;
+	}
+
+	#calendar {
+		max-width: 900px;
+		margin: 0 auto;
+	}
+	
+	.modal{
+		display: none;
+		position: fixed; /* Stay in place */
+		z-index: 1; /* Sit on top */
+		left: 0;
+		top: 0;
+		width: 100%; /* Full width */
+		height: 100%; /* Full height */
+		overflow: auto; /* Enable scroll if needed */
+		background-color: rgb(0,0,0); /* Fallback color */
+		background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+	}
+	/* Modal Content/Box */
+	.modal-content {
+		position: relative;
+		background-color: #3a87ad;
+		margin: 15% auto; /* 15% from the top and centered */
+		padding: 20px;
+		border: 1px solid #888;
+		width: 40%; /* Could be more or less, depending on screen size */
+	}
+	.close{
+		width:30px;
+		height:30px;
+		line-height: 30px;
+		display:inline-block;
+		position:absolute;
+		top:0px;
+		right:0px;
+		margin: auto;
+		transition:ease 0.25s all;
+		-webkit-transform:translate(50%, -50%);
+		transform:translate(50%, -50%);
+		border-radius:50%;
+		background-color: rgba(255,255,255,1);
+		font-family:Arial, Sans-Serif;
+		font-size:17px;
+		text-align:center;
+		color: #3a87ad;
+		text-decoration: none;
+	}
+	.close:hover{
+		-webkit-transform:translate(50%, -50%) rotate(180deg);
+		transform:translate(50%, -50%) rotate(180deg);
+		text-decoration:none;
+	}
+	label{
+		display: block;
+		color: #fff;
+		padding-bottom: 10px;
+		font-size: 20px;
+	}
+	.input{
+		display: block;
+		width: 100%;
+		height: 30px;
+		line-height: 30px;
+		font-size: 15px;
+		color: #fff;
+		text-indent: 10px;
+		background: rgba(255,255,255,0.2);
+		border: 0;
+		outline: none;
+		border: 1px solid #fff;
+		box-sizing: border-box;
+		margin-bottom: 20px;
+	}
+	.btn,.delete{
+        padding: 0 20px;
+		display: inline-block;
+		height: 30px;
+		line-height: 30px;
+		font-size: 15px;
+		color: #3a87ad;
+		background: rgba(255,255,255,1);
+		outline: none;
+		border: 1px solid #fff;
+		box-sizing: border-box;
+		margin-bottom: 20px;
+		transition: all ease 1s;
+		text-decoration: none;
+	}
+	.btn:hover,
+	.delete:hover{
+		background: #3a87ad;
+		color: rgba(255,255,255,1);
+	}
+	.fc-time{
+		display: none;
+	}
+
+</style>
+</head>
+<body>
+
+	<div id='calendar'></div>
+    <div class="modal">
+        <div class="modal-content">
+            <form id="myForm" method="post">
+                <label>Event Title </label>
+                <input type="text" id="title" class="input" name="title" value=""/>
+                <input type="hidden" id="idevent"/>
+                <input type="hidden" id="start" />
+                <input type="hidden" id="end" />
+                <input type="submit" class="btn" value="Add Event"/>
+                <a href="#" class="delete">Delete event</a>
+            </form>
+             <a class="close"  href="#">x</a>
+        </div>
+    </div>
+</body>
+</html>
